@@ -6,12 +6,20 @@ function App() {
   const [formData, setFormData] = useState({ studentId: '', name: '', email: '' })
   const [editingId, setEditingId] = useState(null)
 
+  // Lấy đường dẫn API chuẩn trên GitHub Codespaces
+  const API_URL = '/api/students'
+
   // Fetch danh sách sinh viên
   const fetchStudents = () => {
-    fetch('http://localhost:5000/api/students')
+    setLoading(true)
+    fetch(API_URL)
       .then((res) => res.json())
       .then((data) => {
-        setStudents(data)
+        if (Array.isArray(data)) {
+          setStudents(data)
+        } else {
+          setStudents([])
+        }
         setLoading(false)
       })
       .catch((err) => {
@@ -42,7 +50,7 @@ function App() {
     }
 
     if (editingId) {
-      fetch(`http://localhost:5000/api/students/${editingId}`, {
+      fetch(`${API_URL}/${editingId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -53,7 +61,7 @@ function App() {
         })
         .catch((err) => console.error(err))
     } else {
-      fetch('http://localhost:5000/api/students', {
+      fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -69,7 +77,7 @@ function App() {
   // Xóa sinh viên
   const handleDelete = (id) => {
     if (window.confirm('Bạn có chắc chắn muốn xóa sinh viên này?')) {
-      fetch(`http://localhost:5000/api/students/${id}`, { method: 'DELETE' })
+      fetch(`${API_URL}/${id}`, { method: 'DELETE' })
         .then(() => fetchStudents())
         .catch((err) => console.error(err))
     }
@@ -173,7 +181,6 @@ function App() {
   )
 }
 
-// Custom CSS Styles (inline)
 const styles = {
   container: { maxWidth: '850px', margin: '30px auto', padding: '0 20px', fontFamily: "'Segoe UI', Roboto, sans-serif", color: '#333' },
   header: { textAlign: 'center', marginBottom: '25px' },
