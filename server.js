@@ -7,6 +7,10 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
+app.get('/api/hello', (req, res) => {
+  res.json({ message: 'Hello from MERN Backend' });
+});
+
 // Chuỗi kết nối MongoDB Atlas (Nếu có chuỗi Atlas thật thì thay vào đây)
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/studentdb';
 
