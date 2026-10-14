@@ -1,19 +1,28 @@
-version: '3.8'
-
 services:
-  # Câu 81, 83, 85: Service Backend
+  mongodb:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - student-mongodb-data:/data/db
+
   backend:
     build: .
     ports:
       - "5000:5000"
     environment:
-      - MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/students?retryWrites=true&w=majority
+      MONGODB_URI: ${MONGODB_URI:-mongodb://mongodb:27017/studentdb}
+    depends_on:
+      - mongodb
 
-  # Câu 82, 84: Service Frontend
   frontend:
     build: ./client
     ports:
-      - "3000:3000"
+      - "3000:5173"
+    environment:
+      VITE_API_PROXY_TARGET: http://backend:5000
     depends_on:
       - backend
-      
+
+volumes:
+  student-mongodb-data:

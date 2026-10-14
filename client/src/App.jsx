@@ -1,29 +1,41 @@
 import { useEffect, useState } from 'react'
 
+const defaultStudent = {
+  _id: 'student-234876',
+  studentId: '234876',
+  name: 'Ngô Minh Nhật',
+  email: 'not-set@example.com',
+  className: 'DH23TIN05',
+}
+
 function App() {
-  const [students, setStudents] = useState([])
+  const [students, setStudents] = useState([defaultStudent])
   const [loading, setLoading] = useState(true)
-  const [formData, setFormData] = useState({ studentId: '', name: '', email: '' })
+  const [formData, setFormData] = useState({
+    studentId: defaultStudent.studentId,
+    name: defaultStudent.name,
+    email: defaultStudent.email,
+    className: defaultStudent.className,
+  })
   const [editingId, setEditingId] = useState(null)
 
-  // Lấy đường dẫn API chuẩn trên GitHub Codespaces
   const API_URL = '/api/students'
 
-  // Fetch danh sách sinh viên
   const fetchStudents = () => {
     setLoading(true)
     fetch(API_URL)
       .then((res) => res.json())
       .then((data) => {
-        if (Array.isArray(data)) {
+        if (Array.isArray(data) && data.length > 0) {
           setStudents(data)
         } else {
-          setStudents([])
+          setStudents([defaultStudent])
         }
         setLoading(false)
       })
       .catch((err) => {
         console.error('Lỗi kết nối API:', err)
+        setStudents([defaultStudent])
         setLoading(false)
       })
   }
@@ -36,24 +48,32 @@ function App() {
     setFormData({ ...formData, [e.target.name]: e.target.value })
   }
 
-  // Reset Form
   const handleReset = () => {
-    setFormData({ studentId: '', name: '', email: '' })
+    setFormData({
+      studentId: defaultStudent.studentId,
+      name: defaultStudent.name,
+      email: defaultStudent.email,
+      className: defaultStudent.className,
+    })
     setEditingId(null)
   }
 
-  // Thêm mới hoặc Cập nhật
   const handleSubmit = (e) => {
     e.preventDefault()
-    if (!formData.studentId || !formData.name || !formData.email) {
+    if (!formData.studentId || !formData.name || !formData.className) {
       return alert('Vui lòng nhập đầy đủ thông tin!')
+    }
+
+    const payload = {
+      ...formData,
+      email: formData.email || 'not-set@example.com',
     }
 
     if (editingId) {
       fetch(`${API_URL}/${editingId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       })
         .then(() => {
           handleReset()
@@ -64,7 +84,7 @@ function App() {
       fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       })
         .then(() => {
           handleReset()
@@ -74,7 +94,6 @@ function App() {
     }
   }
 
-  // Xóa sinh viên
   const handleDelete = (id) => {
     if (window.confirm('Bạn có chắc chắn muốn xóa sinh viên này?')) {
       fetch(`${API_URL}/${id}`, { method: 'DELETE' })
@@ -83,20 +102,25 @@ function App() {
     }
   }
 
-  // Chọn sửa
   const handleEdit = (student) => {
     setEditingId(student._id)
-    setFormData({ studentId: student.studentId, name: student.name, email: student.email })
+    setFormData({
+      studentId: student.studentId,
+      name: student.name,
+      email: student.email || '',
+      className: student.className || '',
+    })
   }
 
   return (
     <div style={styles.container}>
       <header style={styles.header}>
-        <h1 style={styles.title}>Quản Lý Sinh Viên</h1>
-        <p style={styles.subtitle}>MERN Stack Application - Cloud Computing Lab</p>
+        <span style={styles.badge}>Student Profile</span>
+        <h1 style={styles.title}>Ngô Minh Nhật</h1>
+        <p style={styles.subtitle}>ID: 234876</p>
+        <p style={styles.subtitle}>Class: DH23TIN05</p>
       </header>
 
-      {/* Form nhập liệu */}
       <div style={styles.card}>
         <h3 style={styles.cardTitle}>{editingId ? '📝 Cập Nhật Thông Tin' : '➕ Thêm Sinh Viên Mới'}</h3>
         <form onSubmit={handleSubmit} style={styles.form}>
@@ -120,13 +144,21 @@ function App() {
               required
             />
             <input
+              type="text"
+              name="className"
+              placeholder="Lớp"
+              value={formData.className}
+              onChange={handleChange}
+              style={styles.input}
+              required
+            />
+            <input
               type="email"
               name="email"
               placeholder="Địa chỉ Email"
               value={formData.email}
               onChange={handleChange}
               style={styles.input}
-              required
             />
           </div>
           <div style={styles.btnGroup}>
@@ -140,7 +172,6 @@ function App() {
         </form>
       </div>
 
-      {/* Bảng danh sách */}
       <div style={styles.card}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
           <h3 style={styles.cardTitle}>📋 Danh Sách Sinh Viên</h3>
@@ -157,6 +188,7 @@ function App() {
               <tr style={styles.thRow}>
                 <th style={styles.th}>MSSV</th>
                 <th style={styles.th}>Họ và Tên</th>
+                <th style={styles.th}>Lớp</th>
                 <th style={styles.th}>Email</th>
                 <th style={styles.thCenter}>Thao Tác</th>
               </tr>
@@ -166,7 +198,8 @@ function App() {
                 <tr key={st._id} style={styles.tr}>
                   <td style={styles.td}><strong>{st.studentId}</strong></td>
                   <td style={styles.td}>{st.name}</td>
-                  <td style={styles.td}>{st.email}</td>
+                  <td style={styles.td}>{st.className || '—'}</td>
+                  <td style={styles.td}>{st.email || '—'}</td>
                   <td style={styles.tdCenter}>
                     <button onClick={() => handleEdit(st)} style={styles.btnEdit}>✏️ Sửa</button>
                     <button onClick={() => handleDelete(st._id)} style={styles.btnDelete}>🗑️ Xóa</button>
@@ -182,19 +215,20 @@ function App() {
 }
 
 const styles = {
-  container: { maxWidth: '850px', margin: '30px auto', padding: '0 20px', fontFamily: "'Segoe UI', Roboto, sans-serif", color: '#333' },
+  container: { maxWidth: '1000px', margin: '30px auto', padding: '0 20px', fontFamily: "'Segoe UI', Roboto, sans-serif", color: '#333' },
   header: { textAlign: 'center', marginBottom: '25px' },
-  title: { margin: 0, color: '#1e293b', fontSize: '28px' },
-  subtitle: { margin: '5px 0 0', color: '#64748b', fontSize: '14px' },
-  card: { backgroundColor: '#fff', borderRadius: '10px', padding: '20px', marginBottom: '20px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06)', border: '1px solid #e2e8f0' },
+  badge: { display: 'inline-block', background: '#dbeafe', color: '#1d4ed8', padding: '6px 12px', borderRadius: '999px', fontSize: '12px', fontWeight: '700', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '12px' },
+  title: { margin: 0, color: '#1e293b', fontSize: '36px' },
+  subtitle: { margin: '8px 0 0', color: '#475569', fontSize: '18px', fontWeight: 600 },
+  card: { backgroundColor: '#fff', borderRadius: '12px', padding: '20px', marginBottom: '20px', boxShadow: '0 8px 20px rgba(15, 23, 42, 0.08)', border: '1px solid #e2e8f0' },
   cardTitle: { margin: '0 0 15px 0', color: '#0f172a', fontSize: '18px' },
   form: { display: 'flex', flexDirection: 'column', gap: '15px' },
   inputGroup: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px' },
-  input: { padding: '10px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none' },
-  btnGroup: { display: 'flex', gap: '10px' },
-  btnAdd: { backgroundColor: '#2563eb', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' },
-  btnUpdate: { backgroundColor: '#16a34a', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' },
-  btnCancel: { backgroundColor: '#94a3b8', color: '#fff', border: 'none', padding: '10px 15px', borderRadius: '6px', cursor: 'pointer' },
+  input: { padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', transition: 'border-color 0.2s ease' },
+  btnGroup: { display: 'flex', gap: '10px', flexWrap: 'wrap' },
+  btnAdd: { backgroundColor: '#2563eb', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' },
+  btnUpdate: { backgroundColor: '#16a34a', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' },
+  btnCancel: { backgroundColor: '#94a3b8', color: '#fff', border: 'none', padding: '10px 15px', borderRadius: '8px', cursor: 'pointer' },
   btnRefresh: { backgroundColor: '#f1f5f9', border: '1px solid #cbd5e1', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' },
   table: { width: '100%', borderCollapse: 'collapse', marginTop: '10px' },
   thRow: { backgroundColor: '#f8fafc', borderBottom: '2px solid #e2e8f0' },

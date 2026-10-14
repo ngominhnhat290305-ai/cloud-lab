@@ -4,11 +4,38 @@ const cors = require('cors');
 const Student = require('./models/Student');
 
 const app = express();
+
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'https://mern-frontend-xo7a.onrender.com',
+  'https://mern-frontend-234876.onrender.com',
+  process.env.CLIENT_URL,
+].filter(Boolean);
+
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
+      callback(null, true);
+      return;
+    }
+
+    callback(null, true);
+  },
+  credentials: true,
+}));
 
 app.get('/api/hello', (req, res) => {
   res.json({ message: 'Hello from MERN Backend' });
+});
+
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'UP',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+  });
 });
 
 // Chuỗi kết nối MongoDB Atlas (Nếu có chuỗi Atlas thật thì thay vào đây)
